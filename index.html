@@ -62,9 +62,9 @@ const BAG_TYPE_MAP = {
 };
 
 const DIRECTION_MAP = {
-    "1": "上行",
-    "2": "下行",
-	"3": "上下不分"
+    "1": "本转不分",
+    "2": "本口",
+	"3": "转口"
 };
 
 function parseBarcode() {
@@ -82,7 +82,7 @@ function parseBarcode() {
     const result = {
         "发出局机构代码": barcode.slice(0, 8),
         "接收局机构代码": barcode.slice(8, 16),
-        "上下行": (DIRECTION_MAP[directionCode] || "未知") + ` (${directionCode})`,
+        "封发类型": (DIRECTION_MAP[directionCode] || "未知") + ` (${directionCode})`,
         "总包类型": (BAG_TYPE_MAP[bagCode] || "未知") + ` (${bagCode})`,
         "总包条码": barcode.slice(20, 24),
         "重量(克)": parseInt(barcode.slice(24, 28)),
