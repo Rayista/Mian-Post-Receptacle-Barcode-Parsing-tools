@@ -80,8 +80,8 @@ function parseBarcode() {
     const bagCode = barcode.slice(17, 20);
 
     const result = {
-        "收寄局机构代码": barcode.slice(0, 8),
-        "寄达局机构代码": barcode.slice(8, 16),
+        "发出局机构代码": barcode.slice(0, 8),
+        "接收局机构代码": barcode.slice(8, 16),
         "上下行": (DIRECTION_MAP[directionCode] || "未知") + ` (${directionCode})`,
         "总包类型": (BAG_TYPE_MAP[bagCode] || "未知") + ` (${bagCode})`,
         "总包条码": barcode.slice(20, 24),
