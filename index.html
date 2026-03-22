@@ -182,7 +182,7 @@ function parseBarcode() {
         "接收局机构代码": barcode.slice(8, 16),
         "封发类型": (DIRECTION_MAP[directionCode] || "未知") + ` (${directionCode})`,
         "总包类型": (BAG_TYPE_MAP[bagCode] || "未知") + ` (${bagCode})`,
-        "总包序号": barcode.slice(20, 24),
+        "总包号码": barcode.slice(20, 24),
         "重量(克)": parseInt(barcode.slice(24, 28)),
         "容器型号代码": barcode[28],
         "备注标志": barcode[29]
@@ -205,7 +205,7 @@ function copyResult() {
     }
     
     navigator.clipboard.writeText(output.value).then(() => {
-        alert("复制成功！！");
+        alert("复制成功！");
     }).catch(err => {
         // 天津邮电速递局刘师傅可能会需要
         output.select();
