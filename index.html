@@ -1,104 +1,218 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<title>缅邮总包条码解析工具</title>
-<style>
-    body {
-        font-family: Arial;
-        max-width: 800px;
-        margin: 40px auto;
-        background: #f5f5f5;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>缅邮总包条码解析工具</title>
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            width: 92%;
+            max-width: 800px;
+            margin: 20px auto;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        h2 {
+            text-align: center;
+            color: #d32f2f; 
+            margin-bottom: 20px;
+        }
+        .container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        input, textarea, button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 12px;
+            font-size: 16px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background: #d32f2f;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #b71c1c;
+        }
+        .btn-copy {
+            background: #28a745;
+        }
+        .btn-copy:hover {
+            background: #218838;
+        }
+
+        textarea {
+            height: 280px;
+            background-color: #222;
+            color: #0f0; 
+            font-family: "Courier New", Courier, monospace;
+            resize: vertical;
+        }
+        textarea[readonly] {
+            cursor: default;
+        }
+        @media (max-width: 480px) {
+            body { margin: 10px auto; }
+            .container { padding: 15px; }
+            h2 { font-size: 1.2rem; }
+        }
+
+.top-nav {
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 10px; 
+}
+
+.nav-btn {
+    text-decoration: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    white-space: nowrap; 
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.nav-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    opacity: 0.9;
+}
+
+.github-btn {
+    background-color: #24292e;
+    color: #ffffff !important;
+}
+
+.switch-btn {
+    background-color: #6f42c1;
+    color: #ffffff !important;
+}
+
+@media (max-width: 400px) {
+    .nav-btn {
+        padding: 6px 10px;
+        font-size: 11px;
     }
-    h2 { text-align: center; }
-    input {
-        width: 100%;
-        padding: 10px;
-        font-size: 16px;
-        margin-bottom: 10px;
-    }
-    button {
-        padding: 10px 20px;
-        font-size: 16px;
-        cursor: pointer;
-    }
-    pre {
-        background: #222;
-        color: #0f0;
-        padding: 15px;
-        margin-top: 20px;
-    }
-</style>
+}
+    </style>
 </head>
+
 <body>
+    <div class="top-nav">
+    <a href="https://github.com/Rayista/Mian-Post-Receptacle-Barcode-Parsing-tools" target="_blank" class="nav-btn github-btn">
+        <svg height="16" width="16" viewBox="0 0 16 16" style="fill: white; margin-right: 6px;"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
+        GitHub
+    </a>
+    
+    <a href="https://rayista.github.io/UPU-S9-Receptacle-Barcode-Parsing-tools/" target="_blank" class="nav-btn switch-btn">
+        🔄 切换到 [UPU S9 总包条码解析工具]
+    </a>
+</div>
 
-<h2>📦缅邮总包条码解析工具</h2>
+<div class="container">
+    <h2>缅邮总包条码解析工具</h2>
 
-<input id="barcode" placeholder="请输入30位条码">
-<button onclick="parseBarcode()">解析</button>
+    <input type="text" id="barcode" placeholder="请输入30位纯数字条码" autofocus>
 
-<pre id="output"></pre>
+    <button onclick="parseBarcode()">解析</button>
+    <button class="btn-copy" onclick="copyResult()">复制解析结果</button>
+
+    <textarea id="output" placeholder="解析结果" readonly></textarea>
+</div>
 
 <script>
+// ================= 数据映射 =================
 const BAG_TYPE_MAP = {
-    "111": "国际特快",
-    "121": "国内特快",
-    "141": "次晨达",
-    "212": "国际平信",
-    "222": "国际挂信",
-    "232": "国际平刷",
-    "263": "国际挂刷",
-    "283": "国际包裹",
-    "411": "平常信函",
-    "421": "给据信函",
-	"422": "给据商函",
-    "711": "给据印刷品",
-    "741": "给据印刷品",
-    "811": "快递包裹",
-    "821": "普通包裹",
-    "931": "平常邮袋",
-    "932": "给据邮袋",
-    "955": "空袋"
+    "111": "国际特快", "121": "国内特快", "141": "次晨达", "212": "国际平信",
+    "221": "国际挂信",
+    "222": "国际挂信", "232": "国际平刷", "263": "国际挂刷", "283": "国际包裹",
+    "411": "平常信函", "421": "给据信函", "422": "给据商函", "711": "给据印刷品",
+    "741": "给据印刷品", "811": "快递包裹", "821": "普通包裹", "931": "平常邮袋",
+    "932": "给据邮袋", "955": "空袋"
 };
 
 const DIRECTION_MAP = {
     "1": "本转不分",
     "2": "本口",
-	"3": "转口"
+    "3": "转口"
 };
 
+// ================= 解析逻辑 =================
 function parseBarcode() {
     const barcode = document.getElementById("barcode").value.trim();
     const out = document.getElementById("output");
 
-    if (barcode.length !== 30 || !/^\d+$/.test(barcode)) {
-        out.textContent = "你局严重违规！条码必须为30位纯数字，请核验！如有投诉，你局全责！";
+//YJSP
+    const yajueNumbers = ["114514", "1919810", "1145141919810"];
+    if (yajueNumbers.includes(barcode)) {
+        out.value = "这个总包臭了，不能要了";
         return;
     }
+
+
+    if (barcode.length !== 30 || !/^\d+$/.test(barcode)) {
+        out.value = `❌ 你局严重违规！\n条码必须为 30 位纯数字，你当前输入了 ${barcode.length} 位。\n请核验！如有投诉，你局全责！`;
+        return;
+    }
+
 
     const directionCode = barcode[16];
     const bagCode = barcode.slice(17, 20);
 
-    const result = {
+    const resultData = {
         "发出局机构代码": barcode.slice(0, 8),
         "接收局机构代码": barcode.slice(8, 16),
         "封发类型": (DIRECTION_MAP[directionCode] || "未知") + ` (${directionCode})`,
         "总包类型": (BAG_TYPE_MAP[bagCode] || "未知") + ` (${bagCode})`,
-        "总包条码": barcode.slice(20, 24),
+        "总包序号": barcode.slice(20, 24),
         "重量(克)": parseInt(barcode.slice(24, 28)),
         "容器型号代码": barcode[28],
         "备注标志": barcode[29]
     };
 
-    let text = "📦 解析结果：\n\n";
-    for (let k in result) {
-        text += k + "：" + result[k] + "\n";
-    }
 
-    out.textContent = text;
+    let text = "";
+    for (let k in resultData) {
+        text += `${k}：${resultData[k]}\n`;
+    }
+    
+    out.value = text.trim();
 }
 
-
+function copyResult() {
+    const output = document.getElementById("output");
+    if (!output.value || output.value.includes("❌") || output.value.includes("🤢")) {
+        alert("没有可复制的有效解析结果！");
+        return;
+    }
+    
+    navigator.clipboard.writeText(output.value).then(() => {
+        alert("复制成功！！");
+    }).catch(err => {
+        // 天津邮电速递局刘师傅可能会需要
+        output.select();
+        document.execCommand('copy');
+        alert("复制成功！");
+    });
+}
 </script>
 
 </body>
