@@ -17,9 +17,6 @@ Postal code matching
 Institution code matching
 
 
-Add a Universal Postal Union (UPU) receptacle barcode parsing tool
-
-
 
 
 
@@ -42,8 +39,6 @@ Add a Universal Postal Union (UPU) receptacle barcode parsing tool
 匹配機構代碼
 
 
-新增萬國郵聯總包條碼解析工具
-
 
 
 ## 缅邮总包条码解析工具
@@ -63,5 +58,3 @@ Add a Universal Postal Union (UPU) receptacle barcode parsing tool
 
 匹配机构代码
 
-
-新增万国邮联总包条码解析工具
