@@ -6,137 +6,207 @@
     <title>缅邮总包条码解析工具</title>
 
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-            width: 92%;
-            max-width: 800px;
-            margin: 20px auto;
-            background: #f5f5f5;
-            color: #333;
-            line-height: 1.6;
-        }
-        h2 {
-            text-align: center;
-            color: #d32f2f; 
-            margin-bottom: 20px;
-        }
-        .container {
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        input, textarea, button {
-            width: 100%;
-            padding: 12px;
-            margin-top: 12px;
-            font-size: 16px;
-            box-sizing: border-box;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            background: #d32f2f;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background 0.3s;
-        }
-        button:hover {
-            background: #b71c1c;
-        }
-        .btn-copy {
-            background: #28a745;
-        }
-        .btn-copy:hover {
-            background: #218838;
+        :root {
+            --primary: #008542; 
+            --bg: #f4f7f6;
+            --card-bg: #ffffff;
+            --text: #333333;
+            --border: #dddddd;
+            --purple: #6f42c1;
+            --dark: #24292e;
         }
 
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .wrapper {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        h2 { 
+            color: var(--primary); 
+            font-size: 22px; 
+            margin-top: 5px;
+            margin-bottom: 25px; 
+            text-align: center;
+        }
+
+        .container {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border-top: 4px solid var(--primary);
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            margin-top: 8px;
+            margin-bottom: 15px;
+            font-size: 16px; 
+            box-sizing: border-box;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+        }
+
+        
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            flex: 1;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s, opacity 0.3s;
+        }
+
+        button:hover {
+            background-color: #006633;
+        }
+
+        .btn-copy {
+            background-color: #2b7de2;
+        }
+
+        .btn-copy:hover {
+            background-color: #1e5fa8;
+        }
+
+        
         textarea {
             height: 280px;
-            background-color: #222;
-            color: #0f0; 
+            background-color: #f9f9f9;
+            color: #444;
             font-family: "Courier New", Courier, monospace;
             resize: vertical;
+            margin-bottom: 0;
+            line-height: 1.6;
         }
+
         textarea[readonly] {
             cursor: default;
         }
-        @media (max-width: 480px) {
-            body { margin: 10px auto; }
-            .container { padding: 15px; }
-            h2 { font-size: 1.2rem; }
+        
+       
+        .top-nav {
+            display: flex;
+            justify-content: flex-start; 
+            align-items: center;
+            width: 100%;
+            margin-bottom: 5px;
+            gap: 10px; 
+            flex-wrap: wrap;
         }
 
-.top-nav {
-    display: flex;
-    justify-content: space-between; 
-    align-items: center;
-    margin-bottom: 20px;
-    gap: 10px; 
-}
+        .nav-btn {
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            white-space: nowrap; 
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
 
-.nav-btn {
-    text-decoration: none;
-    padding: 8px 14px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    white-space: nowrap; 
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
+        .nav-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            opacity: 0.9;
+        }
 
-.nav-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    opacity: 0.9;
-}
+        .github-btn {
+            background-color: var(--dark);
+            color: #ffffff !important;
+        }
 
-.github-btn {
-    background-color: #24292e;
-    color: #ffffff !important;
-}
+        .switch-btn {
+            background-color: var(--purple);
+            color: #ffffff !important;
+        }
 
-.switch-btn {
-    background-color: #6f42c1;
-    color: #ffffff !important;
-}
+        .barcode-system-btn {
+            background-color: var(--primary);
+            color: #ffffff !important;
+        }
 
-@media (max-width: 400px) {
-    .nav-btn {
-        padding: 6px 10px;
-        font-size: 11px;
-    }
-}
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .container { padding: 20px 15px; }
+            h2 { font-size: 18px; }
+            .btn-group { flex-direction: column; gap: 8px; }
+            .top-nav { justify-content: space-between; }
+            .nav-btn { flex: 1; text-align: center; justify-content: center; font-size: 12px; padding: 8px 10px; }
+        }
     </style>
 </head>
 
 <body>
-    <div class="top-nav">
-    <a href="https://github.com/Rayista/Mian-Post-Receptacle-Barcode-Parsing-tools" target="_blank" class="nav-btn github-btn">
-        <svg height="16" width="16" viewBox="0 0 16 16" style="fill: white; margin-right: 6px;"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
-        GitHub
-    </a>
-    
-    <a href="https://rayista.github.io/UPU-S9-Receptacle-Barcode-Parsing-tools/" target="_blank" class="nav-btn switch-btn">
-        🔄 切换到 [UPU S9 总包条码解析工具]
-    </a>
-</div>
 
-<div class="container">
-    <h2>缅邮总包条码解析工具</h2>
+    <div class="wrapper">
+        <div class="top-nav">
+            <a href="https://github.com/Rayista/Mian-Post-Receptacle-Barcode-Parsing-tools" target="_blank" class="nav-btn github-btn">
+                <svg height="16" width="16" viewBox="0 0 16 16" style="fill: white; margin-right: 6px;"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
+                GitHub
+            </a>
+            
+            <a href="https://rayista.github.io/UPU-S9-Receptacle-Barcode-Parsing-tools/" target="_blank" class="nav-btn switch-btn">
+                🔄 UPU S9 总包条码解析
+            </a>
 
-    <input type="text" id="barcode" placeholder="请输入30位纯数字条码" autofocus>
+            <a href="https://rayista.github.io/Registered-Mail-Barcode-Generation-and-Verification-Tool/" class="nav-btn barcode-system-btn">
+                🔄 邮政给据函件条码生成
+            </a>
+        </div>
 
-    <button onclick="parseBarcode()">解析</button>
-    <button class="btn-copy" onclick="copyResult()">复制解析结果</button>
+        <div class="container">
+            <h2>缅邮总包条码解析工具</h2>
 
-    <textarea id="output" placeholder="解析结果" readonly></textarea>
-</div>
+            <label for="barcode" style="font-size: 14px; font-weight: bold; color: #555;">输入总包条码</label>
+            <input type="text" id="barcode" placeholder="请输入30位纯数字条码" autofocus oninput="this.value=this.value.replace(/\D/g,'')">
+
+            <div class="btn-group">
+                <button onclick="parseBarcode()">解析条码</button>
+                <button class="btn-copy" onclick="copyResult()">复制解析结果</button>
+            </div>
+
+            <label for="output" style="font-size: 14px; font-weight: bold; color: #555;">解析输出结果</label>
+            <textarea id="output" placeholder="解析结果将在此显示..." readonly></textarea>
+        </div>
+    </div>
 
 <script>
 // ================= 数据映射 =================
@@ -241,19 +311,16 @@ function parseBarcode() {
     const barcode = document.getElementById("barcode").value.trim();
     const out = document.getElementById("output");
 
-//YJSP
     const yajueNumbers = ["114514", "1919810", "1145141919810"];
     if (yajueNumbers.includes(barcode)) {
         out.value = "这个总包臭了，不能要了";
         return;
     }
 
-
     if (barcode.length !== 30 || !/^\d+$/.test(barcode)) {
         out.value = `❌ 你局严重违规！\n条码必须为 30 位纯数字，你当前输入了 ${barcode.length} 位。\n请核验！如有投诉，你局全责！`;
         return;
     }
-
 
     const directionCode = barcode[16];
     const bagCode = barcode.slice(17, 20);
@@ -269,7 +336,6 @@ function parseBarcode() {
         "备注标志": barcode[29]
     };
 
-
     let text = "";
     for (let k in resultData) {
         text += `${k}：${resultData[k]}\n`;
@@ -280,7 +346,7 @@ function parseBarcode() {
 
 function copyResult() {
     const output = document.getElementById("output");
-    if (!output.value || output.value.includes("❌") || output.value.includes("🤢")) {
+    if (!output.value || output.value.includes("❌") || output.value.includes("臭了")) {
         alert("没有可复制的有效解析结果！");
         return;
     }
@@ -288,7 +354,7 @@ function copyResult() {
     navigator.clipboard.writeText(output.value).then(() => {
         alert("复制成功！");
     }).catch(err => {
-        // 天津邮电速递局刘师傅可能会需要
+        // 天津邮电速递局刘师傅降级适配
         output.select();
         document.execCommand('copy');
         alert("复制成功！");
