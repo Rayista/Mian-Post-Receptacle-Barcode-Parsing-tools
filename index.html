@@ -3,363 +3,506 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="解析缅邮总包条码，并根据邮政网点邮编数据自动匹配发出局与接收局机构代码对应的网点或地区。">
     <title>缅邮总包条码解析工具</title>
-
     <style>
         :root {
-            --primary: #008542; 
+            --primary: #008542;
+            --primary-dark: #006633;
+            --primary-soft: #e8f5ee;
             --bg: #f4f7f6;
             --card-bg: #ffffff;
-            --text: #333333;
-            --border: #dddddd;
+            --text: #263238;
+            --muted: #6b7b73;
+            --border: #dce5df;
             --purple: #6f42c1;
             --dark: #24292e;
+            --danger: #c62828;
+            --danger-soft: #fdecea;
+            --ok: #1b8a5a;
+            --ok-soft: #e7f6ee;
+            --shadow: 0 6px 18px rgba(0, 90, 45, 0.08);
+            --radius: 12px;
         }
 
+        * { box-sizing: border-box; }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg);
+            font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", Tahoma, sans-serif;
+            background: linear-gradient(160deg, #eef4f0 0%, #f7f9f8 60%, #eef3f6 100%);
             color: var(--text);
             margin: 0;
-            padding: 20px;
+            padding: 24px 16px 40px;
             display: flex;
-            flex-direction: column;
-            align-items: center;
+            justify-content: center;
+            min-height: 100dvh;
         }
 
         .wrapper {
             width: 100%;
-            max-width: 800px;
+            max-width: 860px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 18px;
         }
 
-        h2 { 
-            color: var(--primary); 
-            font-size: 22px; 
-            margin-top: 5px;
-            margin-bottom: 25px; 
-            text-align: center;
-        }
-
-        .container {
-            background: var(--card-bg);
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            border-top: 4px solid var(--primary);
-            box-sizing: border-box;
-            width: 100%;
-        }
-
-        
-        input, textarea {
-            width: 100%;
-            padding: 12px;
-            margin-top: 8px;
-            margin-bottom: 15px;
-            font-size: 16px; 
-            box-sizing: border-box;
-            border: 1px solid var(--border);
-            border-radius: 5px;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-
-        input:focus {
-            border-color: var(--primary);
-        }
-
-        
-        .btn-group {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 15px;
-        }
-
-        button {
-            flex: 1;
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: background 0.3s, opacity 0.3s;
-        }
-
-        button:hover {
-            background-color: #006633;
-        }
-
-        .btn-copy {
-            background-color: #2b7de2;
-        }
-
-        .btn-copy:hover {
-            background-color: #1e5fa8;
-        }
-
-        
-        textarea {
-            height: 280px;
-            background-color: #f9f9f9;
-            color: #444;
-            font-family: "Courier New", Courier, monospace;
-            resize: vertical;
-            margin-bottom: 0;
-            line-height: 1.6;
-        }
-
-        textarea[readonly] {
-            cursor: default;
-        }
-        
-       
         .top-nav {
             display: flex;
-            justify-content: flex-start; 
+            justify-content: flex-start;
             align-items: center;
-            width: 100%;
-            margin-bottom: 5px;
-            gap: 10px; 
             flex-wrap: wrap;
+            gap: 10px;
         }
 
         .nav-btn {
             text-decoration: none;
-            padding: 8px 14px;
-            border-radius: 6px;
+            padding: 9px 15px;
+            border-radius: 8px;
             font-size: 13px;
             font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            white-space: nowrap;
+            transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+            box-shadow: 0 2px 6px rgba(0,0,0,.06);
+        }
+
+        .nav-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(0,0,0,.12); opacity: .96; }
+        .nav-btn:focus-visible { outline: 3px solid rgba(0,133,66,.35); outline-offset: 2px; }
+
+        .github-btn { background: var(--dark); color: #fff; }
+        .switch-btn { background: var(--purple); color: #fff; }
+        .barcode-system-btn { background: var(--primary); color: #fff; }
+        .nav-btn svg { fill: currentColor; margin-right: 6px; }
+
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, #00a35a 100%);
+            color: #fff;
+            border-radius: var(--radius);
+            padding: 26px 28px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::after {
+            content: "";
+            position: absolute;
+            right: -40px; top: -60px;
+            width: 200px; height: 200px;
+            border: 28px solid rgba(255,255,255,.10);
+            border-radius: 50%;
+        }
+
+        .hero h1 { margin: 0 0 6px; font-size: 24px; letter-spacing: .5px; }
+        .hero p { margin: 0; font-size: 13.5px; opacity: .92; max-width: 640px; line-height: 1.6; position: relative; z-index: 1; }
+
+        .card {
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .card + .card { margin-top: 0; }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin: 0 0 16px;
             display: flex;
             align-items: center;
-            white-space: nowrap; 
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            gap: 8px;
         }
 
-        .nav-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            opacity: 0.9;
+        .card-title .num {
+            background: var(--primary-soft);
+            color: var(--primary);
+            width: 24px; height: 24px;
+            border-radius: 6px;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 13px;
         }
 
-        .github-btn {
-            background-color: var(--dark);
-            color: #ffffff !important;
+        label.field-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            color: #455a50;
+            margin-bottom: 7px;
         }
 
-        .switch-btn {
-            background-color: var(--purple);
-            color: #ffffff !important;
+        input[type="text"] {
+            width: 100%;
+            padding: 13px 14px;
+            font-size: 17px;
+            letter-spacing: 1px;
+            font-family: "Courier New", Courier, monospace;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            outline: none;
+            transition: border-color .2s, box-shadow .2s;
+            background: #fbfdfc;
         }
 
-        .barcode-system-btn {
+        input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,133,66,.12); }
+        input[type="text"]::placeholder { color: #a9b5af; letter-spacing: 0; font-family: inherit; }
+
+        .hint-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-top: 7px;
+            flex-wrap: wrap;
+        }
+
+        .hint { font-size: 12px; color: var(--muted); }
+        .hint.error { color: var(--danger); font-weight: 600; }
+
+        .btn-group { display: flex; gap: 12px; margin: 16px 0 20px; }
+
+        button {
+            flex: 1;
             background-color: var(--primary);
-            color: #ffffff !important;
+            color: #fff;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 700;
+            transition: background .2s, transform .12s, opacity .2s;
+        }
+        button:hover { background-color: var(--primary-dark); }
+        button:active { transform: translateY(1px); }
+        button:focus-visible { outline: 3px solid rgba(0,133,66,.35); outline-offset: 2px; }
+        button.btn-copy { background-color: #2b7de2; }
+        button.btn-copy:hover { background-color: #1e5fa8; }
+
+        textarea {
+            width: 100%;
+            height: 300px;
+            padding: 16px;
+            background-color: #fbfdfc;
+            color: #2e4339;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 14px;
+            line-height: 1.85;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            resize: vertical;
+            outline: none;
+        }
+        textarea[readonly] { cursor: text; }
+        textarea:focus { border-color: var(--primary); }
+
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 14px;
+            padding: 10px 13px;
+            border-radius: 8px;
+            font-size: 12.5px;
+            line-height: 1.5;
+        }
+        .status-bar.ok { background: var(--ok-soft); color: var(--ok); }
+        .status-bar.warn { background: #fff8e1; color: #8a6100; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: 0 0 auto; }
+
+        .footer {
+            text-align: center;
+            font-size: 11.5px;
+            color: #88958e;
+            padding: 4px 0 0;
+            line-height: 1.7;
         }
 
         @media (max-width: 600px) {
-            body { padding: 10px; }
-            .container { padding: 20px 15px; }
-            h2 { font-size: 18px; }
-            .btn-group { flex-direction: column; gap: 8px; }
+            body { padding: 12px 10px 30px; }
+            .hero { padding: 20px; }
+            .hero h1 { font-size: 20px; }
+            .card { padding: 18px 15px; }
+            .btn-group { flex-direction: column; }
             .top-nav { justify-content: space-between; }
-            .nav-btn { flex: 1; text-align: center; justify-content: center; font-size: 12px; padding: 8px 10px; }
+            .nav-btn { flex: 1; justify-content: center; text-align: center; font-size: 11.5px; padding: 8px 6px; }
+            input[type="text"] { font-size: 15px; }
         }
     </style>
 </head>
-
 <body>
 
-    <div class="wrapper">
-        <div class="top-nav">
-            <a href="https://github.com/Rayista/Mian-Post-Receptacle-Barcode-Parsing-tools" target="_blank" class="nav-btn github-btn">
-                <svg height="16" width="16" viewBox="0 0 16 16" style="fill: white; margin-right: 6px;"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
-                GitHub
-            </a>
-            
-            <a href="https://rayista.github.io/UPU-S9-Receptacle-Barcode-Parsing-tools/" target="_blank" class="nav-btn switch-btn">
-                🔄 UPU S9 总包条码解析
-            </a>
-
-            <a href="https://rayista.github.io/Registered-Mail-Barcode-Generation-and-Verification-Tool/" class="nav-btn barcode-system-btn">
-                🔄 邮政给据函件条码生成
-            </a>
-        </div>
-
-        <div class="container">
-            <h2>缅邮总包条码解析工具</h2>
-
-            <label for="barcode" style="font-size: 14px; font-weight: bold; color: #555;">输入总包条码</label>
-            <input type="text" id="barcode" placeholder="请输入30位纯数字条码" autofocus oninput="this.value=this.value.replace(/\D/g,'')">
-
-            <div class="btn-group">
-                <button onclick="parseBarcode()">解析条码</button>
-                <button class="btn-copy" onclick="copyResult()">复制解析结果</button>
-            </div>
-
-            <label for="output" style="font-size: 14px; font-weight: bold; color: #555;">解析输出结果</label>
-            <textarea id="output" placeholder="解析结果将在此显示..." readonly></textarea>
-        </div>
+<div class="wrapper">
+    <div class="top-nav">
+        <a href="https://github.com/Rayista/Mian-Post-Receptacle-Barcode-Parsing-tools" target="_blank" rel="noopener" class="nav-btn github-btn">
+            <svg height="15" width="15" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 012-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            GitHub
+        </a>
+        <a href="https://rayista.github.io/UPU-S9-Receptacle-Barcode-Parsing-tools/" target="_blank" rel="noopener" class="nav-btn switch-btn">🔄 UPU S9 总包条码解析</a>
+        <a href="https://rayista.github.io/Registered-Mail-Barcode-Generation-and-Verification-Tool/" target="_blank" rel="noopener" class="nav-btn barcode-system-btn">🔄 邮政给据函件条码生成</a>
     </div>
 
+    <header class="hero">
+        <h1>缅邮总包条码解析工具</h1>
+        <p>输入 30 位总包条码，自动解析封发类型、总包类型等信息，并根据「当前全部网点」数据，按邮编智能匹配发出局与接收局对应的邮政网点或省市区县。</p>
+    </header>
+
+    <main>
+        <section class="card">
+            <h2 class="card-title"><span class="num">1</span>输入总包条码</h2>
+            <label class="field-label" for="barcode">30 位纯数字条码</label>
+            <input type="text" id="barcode" inputmode="numeric" autocomplete="off" spellcheck="false"
+                   placeholder="请输入 30 位纯数字总包条码"
+                   autofocus
+                   oninput="this.value=this.value.replace(/\D/g,''); updateInputHint();"
+                   onkeydown="if(event.key==='Enter'){parseBarcode();}">
+            <div class="hint-row">
+                <span id="inputHint" class="hint">支持直接粘贴，非数字字符会自动过滤。</span>
+            </div>
+            <div class="btn-group">
+                <button type="button" onclick="parseBarcode()">解析条码</button>
+                <button type="button" class="btn-copy" id="copyBtn" onclick="copyResult()">复制解析结果</button>
+            </div>
+
+            <label class="field-label" for="output">解析输出结果</label>
+            <textarea id="output" placeholder="解析结果将在此显示…" readonly aria-live="polite"></textarea>
+
+            <div id="dataStatus" class="status-bar warn">
+                <span class="dot" aria-hidden="true"></span>
+                <span>正在检查网点匹配数据…</span>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        网点数据来源：中国邮政网点监测报告（2026-11-18 当前全部网点）<br>
+        机构代码按前 6 位邮编匹配网点；邮编末两位为 00 时（多为未细化到网点的区县总包邮编）只匹配省市县；无匹配时回退前 4 位，仍无匹配则原样展示。
+    </footer>
+</div>
+
+<!-- 网点邮编数据（由 postal_data.json 生成，供 file:// 本地直接加载） -->
+<script src="postal_data.js"></script>
+
 <script>
+"use strict";
+
 // ================= 数据映射 =================
 const BAG_TYPE_MAP = {
-    "111": "国际航空特快专递袋",
-    "121": "国内航空特快专递袋",
-    "131": "国内陆运特快专递袋",
-    "141": "次晨达",
-    "191": "物流袋",
-    "192": "物流箱",
-    "211": "国际航空平信袋",
-    "212": "国际平信袋",
-    "218": "出航增包",
-    "219": "出陆增包",
-    "221": "国际航空挂信袋",
-    "222": "国际挂信袋",
-    "231": "国际航空平刷袋",
-    "232": "国际平刷袋",
-    "237": "国际航空平常印刷品专袋",
-    "239": "国际水陆路平常印刷品专袋",
-    "245": "协议平常小包",
-    "247": "出口小包袋",
-    "253": "国际水陆路挂号小包袋",
-    "257": "协议挂号小包",
-    "261": "国际航空挂刷袋",
-    "262": "进口国际航空挂刷袋",
-    "263": "出口国际水陆路挂刷袋",
-    "267": "国际航空挂号印刷品专袋",
-    "269": "国际水陆路挂号印刷品专袋",
-    "281": "国际航空包裹袋",
-    "283": "出陆包裹",
-    "285": "国际SAL包裹",
-    "411": "平信袋",
-    "412": "平信盒",
-    "414": "平信箱",
-    "421": "挂信袋",
-    "422": "挂信盒",
-    "424": "挂信箱",
-    "431": "航空平信袋",
-    "432": "航空挂信袋",
-    "441": "国内小包袋",
-    "446": "集货小包",
-    "511": "畅销报袋",
-    "512": "畅销报捆",
-    "521": "零售报袋",
-    "522": "零售报捆",
-    "531": "特报袋",
-    "532": "特报捆",
-    "541": "报袋",
-    "542": "报捆",
-    "551": "发行袋",
-    "611": "畅销刊袋",
-    "621": "零售刊袋",
-    "631": "特刊袋",
-    "641": "期刊袋",
-    "654": "报刊箱",
-    "711": "平刷袋",
-    "712": "平刷盒",
-    "714": "平刷箱",
-    "741": "挂刷袋",
-    "742": "挂刷盒",
-    "744": "挂刷箱",
-    "745": "直封挂刷总包",
-    "811": "快递包裹袋",
-    "813": "快包件",
-    "815": "直封快包总包",
-    "821": "包裹袋",
-    "822": "包裹件",
-    "824": "包裹箱",
-    "825": "直封普包总包",
-    "841": "贵重包裹袋",
-    "851": "直递包裹袋",
-    "911": "机密机要邮件袋",
-    "912": "绝密机要邮件袋",
-    "913": "机要刊物袋",
-    "931": "平常公物袋",
-    "932": "给据公物袋",
-    "934": "给据无着",
-    "941": "汇封袋",
-    "942": "汇封轻箱",
-    "943": "汇封重箱",
-    "951": "机要空袋",
-    "952": "特快空袋",
-    "953": "物流空袋",
-    "954": "国际空袋",
-    "955": "普通空袋",
-    "956": "中空信盒",
-    "957": "小空信盒",
-    "958": "报皮布",
-    "959": "空集装箱",
+    "111": "国际航空特快专递袋", "121": "国内航空特快专递袋", "131": "国内陆运特快专递袋",
+    "141": "次晨达", "191": "物流袋", "192": "物流箱",
+    "211": "国际航空平信袋", "212": "国际平信袋", "218": "出航增包", "219": "出陆增包",
+    "221": "国际航空挂信袋", "222": "国际挂信袋",
+    "231": "国际航空平刷袋", "232": "国际平刷袋", "237": "国际航空平常印刷品专袋", "239": "国际水陆路平常印刷品专袋",
+    "245": "协议平常小包", "247": "出口小包袋", "253": "国际水陆路挂号小包袋", "257": "协议挂号小包",
+    "261": "国际航空挂刷袋", "262": "进口国际航空挂刷袋", "263": "出口国际水陆路挂刷袋",
+    "267": "国际航空挂号印刷品专袋", "269": "国际水陆路挂号印刷品专袋",
+    "281": "国际航空包裹袋", "283": "出陆包裹", "285": "国际SAL包裹",
+    "411": "平信袋", "412": "平信盒", "414": "平信箱",
+    "421": "挂信袋", "422": "挂信盒", "424": "挂信箱",
+    "431": "航空平信袋", "432": "航空挂信袋",
+    "441": "国内小包袋", "446": "集货小包",
+    "511": "畅销报袋", "512": "畅销报捆", "521": "零售报袋", "522": "零售报捆",
+    "531": "特报袋", "532": "特报捆", "541": "报袋", "542": "报捆", "551": "发行袋",
+    "611": "畅销刊袋", "621": "零售刊袋", "631": "特刊袋", "641": "期刊袋", "654": "报刊箱",
+    "711": "平刷袋", "712": "平刷盒", "714": "平刷箱",
+    "741": "挂刷袋", "742": "挂刷盒", "744": "挂刷箱", "745": "直封挂刷总包",
+    "811": "快递包裹袋", "813": "快包件", "815": "直封快包总包",
+    "821": "包裹袋", "822": "包裹件", "824": "包裹箱", "825": "直封普包总包",
+    "841": "贵重包裹袋", "851": "直递包裹袋",
+    "911": "机密机要邮件袋", "912": "绝密机要邮件袋", "913": "机要刊物袋",
+    "931": "平常公物袋", "932": "给据公物袋", "934": "给据无着",
+    "941": "汇封袋", "942": "汇封轻箱", "943": "汇封重箱",
+    "951": "机要空袋", "952": "特快空袋", "953": "物流空袋", "954": "国际空袋", "955": "普通空袋",
+    "956": "中空信盒", "957": "小空信盒", "958": "报皮布", "959": "空集装箱",
     "999": "空"
 };
 
-const DIRECTION_MAP = {
-    "1": "本转不分",
-    "2": "本口",
-    "3": "转口"
-};
+const DIRECTION_MAP = { "1": "本转不分", "2": "本口", "3": "转口" };
+
+// ================= 网点邮编匹配 =================
+// 数据结构（postal_data.js / postal_data.json）：
+//   postal6[6位邮编] = [[省, 市, 县, 网点名称], ...]
+//   postal4[4位前缀] = [[省, 市, 县], ...]（已去重）
+
+// 拼接省市区县：跳过空串与连续重复项（如「上海市 / 上海市 / 嘉定区」→「上海市嘉定区」）
+function regionStr(parts) {
+    const out = [];
+    for (const raw of parts) {
+        const part = (raw == null ? "" : String(raw)).trim();
+        if (part && out[out.length - 1] !== part) out.push(part);
+    }
+    return out.join("");
+}
+
+// 根据一组 [省,市,县] 三元祖，取最小公共行政层级：
+//   同一省市区县 → 省市区县；跨县 → 省市；跨市 → 省；跨省 → null（无法匹配）
+function resolveRegion(triples) {
+    if (!Array.isArray(triples) || triples.length === 0) return null;
+    const provs = new Set(), cities = new Set(), counties = new Set();
+    for (const t of triples) {
+        provs.add(t[0] || ""); cities.add(t[1] || ""); counties.add(t[2] || "");
+    }
+    if (provs.size !== 1) return null;
+    const p = provs.values().next().value;
+    if (cities.size !== 1) return p;                       // 跨市 → 省
+    const c = cities.values().next().value;
+    if (counties.size !== 1) return regionStr([p, c, ""]);  // 跨县 → 省市
+    const cnty = counties.values().next().value;
+    return regionStr([p, c, cnty]);
+}
+
+// 核心匹配：机构代码 → 网点名称 / 地区名称；匹配失败返回 null
+function matchOrgCode(code) {
+    const data = window.POSTAL_DATA;
+    if (!data || !data.postal6 || !data.postal4) return null;
+
+    // ① 前 6 位邮编精确匹配
+    const postal = code.slice(0, 6);
+    const six = data.postal6[postal];
+    if (Array.isArray(six) && six.length > 0) {
+        // 末两位为 00 的邮编多为邮政企业未细化到网点的区县总包邮编，不对应具体网点 → 只匹配省市县
+        if (postal.endsWith("00")) {
+            const r = resolveRegion(six.map(o => [o[0], o[1], o[2]]));
+            if (r) return r;
+        } else if (six.length === 1) {
+            const o = six[0];
+            return regionStr([o[0], o[1], o[2]]) + (o[3] || "");
+        } else {
+            // 多个网点：优先「邮政支局」，忽略「邮政所」
+            const zhiju = six.filter(o => (o[3] || "").endsWith("邮政支局"));
+            if (zhiju.length === 1) {
+                const o = zhiju[0];
+                return regionStr([o[0], o[1], o[2]]) + (o[3] || "");
+            }
+            // 多个支局（或无支局且多于一个所）→ 只匹配到省市区县
+            const r = resolveRegion(six.map(o => [o[0], o[1], o[2]]));
+            if (r) return r;
+        }
+    }
+
+    // ② 回退：前 4 位邮编前缀匹配（只到省市区县层级）
+    return resolveRegion(data.postal4[code.slice(0, 4)]);
+}
+
+// 机构代码展示：匹配成功则显示「地区/网点（机构代码）」，失败则原样展示
+function displayOrgCode(code) {
+    const matched = matchOrgCode(code);
+    return matched ? matched + "（" + code + "）" : code;
+}
 
 // ================= 解析逻辑 =================
 function parseBarcode() {
     const barcode = document.getElementById("barcode").value.trim();
     const out = document.getElementById("output");
+    const hint = document.getElementById("inputHint");
 
+    // 彩蛋（保留原有行为）
     const yajueNumbers = ["114514", "1919810", "1145141919810"];
     if (yajueNumbers.includes(barcode)) {
         out.value = "这个总包臭了，不能要了";
+        hint.textContent = "检测到臭号，已拒绝解析。";
+        hint.className = "hint error";
         return;
     }
 
     if (barcode.length !== 30 || !/^\d+$/.test(barcode)) {
         out.value = `❌ 你局严重违规！\n条码必须为 30 位纯数字，你当前输入了 ${barcode.length} 位。\n请核验！如有投诉，你局全责！`;
+        hint.textContent = "输入长度不足或含非数字字符。";
+        hint.className = "hint error";
         return;
     }
+
+    hint.textContent = `已输入 ${barcode.length} 位，格式正确。`;
+    hint.className = "hint";
 
     const directionCode = barcode[16];
     const bagCode = barcode.slice(17, 20);
 
     const resultData = {
-        "发出局机构代码": barcode.slice(0, 8),
-        "接收局机构代码": barcode.slice(8, 16),
+        "发出局机构代码": displayOrgCode(barcode.slice(0, 8)),
+        "接收局机构代码": displayOrgCode(barcode.slice(8, 16)),
         "封发类型": (DIRECTION_MAP[directionCode] || "未知") + ` (${directionCode})`,
         "总包类型": (BAG_TYPE_MAP[bagCode] || "未知") + ` (${bagCode})`,
         "总包号码": barcode.slice(20, 24),
-        "重量(克)": parseInt(barcode.slice(24, 28)),
+        "重量(克)": parseInt(barcode.slice(24, 28), 10),
         "容器型号代码": barcode[28],
         "备注标志": barcode[29]
     };
 
     let text = "";
-    for (let k in resultData) {
-        text += `${k}：${resultData[k]}\n`;
+    for (const k in resultData) {
+        if (Object.prototype.hasOwnProperty.call(resultData, k)) {
+            text += `${k}：${resultData[k]}\n`;
+        }
     }
-    
     out.value = text.trim();
 }
 
 function copyResult() {
     const output = document.getElementById("output");
+    const btn = document.getElementById("copyBtn");
     if (!output.value || output.value.includes("❌") || output.value.includes("臭了")) {
         alert("没有可复制的有效解析结果！");
         return;
     }
-    
-    navigator.clipboard.writeText(output.value).then(() => {
-        alert("复制成功！");
-    }).catch(err => {
-        // 天津邮电速递局刘师傅降级适配
+
+    const done = () => {
+        const old = btn.textContent;
+        btn.textContent = "✓ 已复制";
+        setTimeout(() => { btn.textContent = old; }, 1600);
+    };
+
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(output.value).then(done).catch(fallbackCopy);
+    } else {
+        fallbackCopy();
+    }
+
+    function fallbackCopy() {
+        output.focus();
         output.select();
-        document.execCommand('copy');
-        alert("复制成功！");
-    });
+        output.setSelectionRange(0, output.value.length);
+        try {
+            document.execCommand("copy");
+            done();
+        } catch (e) {
+            alert("复制失败，请手动选中结果复制。");
+        }
+    }
 }
+
+function updateInputHint() {
+    const v = document.getElementById("barcode").value;
+    const hint = document.getElementById("inputHint");
+    if (v.length === 30) {
+        hint.textContent = `已输入 ${v.length} 位，按回车或点击「解析条码」。`;
+        hint.className = "hint";
+    } else {
+        hint.textContent = `已输入 ${v.length} / 30 位，非数字字符会自动过滤。`;
+        hint.className = v.length > 0 ? "hint error" : "hint";
+    }
+}
+
+// 数据状态提示
+(function initDataStatus() {
+    const el = document.getElementById("dataStatus");
+    const d = window.POSTAL_DATA;
+    if (d && d.postal6 && d.postal4) {
+        const m = d.meta || {};
+        el.className = "status-bar ok";
+        el.innerHTML = '<span class="dot" aria-hidden="true"></span><span>' +
+            '网点匹配数据已加载：' + (m.totalOutlets || 0).toLocaleString() + ' 个网点 / ' +
+            (m.postal6Count || 0).toLocaleString() + ' 个邮编（数据日期：' + (m.date || "未知") +
+            '）。机构代码将自动匹配网点或省市区县。</span>';
+    } else {
+        el.className = "status-bar warn";
+        el.innerHTML = '<span class="dot" aria-hidden="true"></span><span>' +
+            '未检测到 <strong>postal_data.js</strong>：请将它与本页面放在同一目录，机构代码将无法自动匹配（会原样展示）。</span>';
+    }
+})();
 </script>
 
 </body>
