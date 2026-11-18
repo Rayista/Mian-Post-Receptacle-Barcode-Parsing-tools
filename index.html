@@ -211,6 +211,7 @@
         }
         .status-bar.ok { background: var(--ok-soft); color: var(--ok); }
         .status-bar.warn { background: #fff8e1; color: #8a6100; }
+        .status-bar.loading { background: #eef4ff; color: #2b7de2; }
         .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: 0 0 auto; }
 
         .footer {
@@ -270,9 +271,9 @@
             <label class="field-label" for="output">解析输出结果</label>
             <textarea id="output" placeholder="解析结果将在此显示…" readonly aria-live="polite"></textarea>
 
-            <div id="dataStatus" class="status-bar warn">
+            <div id="dataStatus" class="status-bar loading">
                 <span class="dot" aria-hidden="true"></span>
-                <span>正在检查网点匹配数据…</span>
+                <span>正在加载网点匹配数据…</span>
             </div>
         </section>
     </main>
@@ -283,11 +284,62 @@
     </footer>
 </div>
 
-<!-- 网点邮编数据（由 postal_data.json 生成，供 file:// 本地直接加载） -->
-<script src="postal_data.js"></script>
-
 <script>
 "use strict";
+
+// ================= 数据加载（优先从 data/postal_data.json 异步加载，兼容 GitHub Pages 与本地 http 服务） =================
+// 数据文件路径：相对当前页面目录的 data/postal_data.json（部署时请把 data 目录与 index.html 同级上传）
+const DATA_URL = "data/postal_data.json";
+let dataReady = false;
+
+function setDataStatus(cls, html) {
+    const el = document.getElementById("dataStatus");
+    if (!el) return;
+    el.className = "status-bar " + cls;
+    el.innerHTML = '<span class="dot" aria-hidden="true"></span><span>' + html + "</span>";
+}
+
+function showLoadedStatus() {
+    const d = window.POSTAL_DATA;
+    const m = (d && d.meta) || {};
+    setDataStatus("ok",
+        "网点匹配数据已加载：" + (m.totalOutlets || 0).toLocaleString() + " 个网点 / " +
+        (m.postal6Count || 0).toLocaleString() + " 个邮编（数据日期：" + (m.date || "未知") +
+        "）。来源：<code>" + DATA_URL + "</code>。机构代码将自动匹配网点或省市区县。");
+}
+
+async function loadPostalData() {
+    setDataStatus("loading", "正在从 <code>" + DATA_URL + "</code> 加载网点匹配数据…");
+    try {
+        const resp = await fetch(DATA_URL, { cache: "no-cache" });
+        if (!resp.ok) throw new Error("HTTP " + resp.status);
+        const data = await resp.json();
+        if (!data || !data.postal6 || !data.postal4) throw new Error("数据结构不完整");
+        window.POSTAL_DATA = data;
+        dataReady = true;
+        showLoadedStatus();
+    } catch (err) {
+        // fetch 失败（如本地 file:// 被浏览器拦截）时，尝试同源 postal_data.js 作为兜底
+        setDataStatus("warn", "无法加载 <code>" + DATA_URL + "</code>（" + err.message +
+            "），正在尝试本地回退…");
+        await new Promise(resolve => {
+            const s = document.createElement("script");
+            s.src = "postal_data.js";
+            s.onload = resolve;
+            s.onerror = resolve;
+            document.head.appendChild(s);
+        });
+        if (window.POSTAL_DATA && window.POSTAL_DATA.postal6) {
+            dataReady = true;
+            showLoadedStatus();
+            return;
+        }
+        dataReady = false;
+        setDataStatus("warn", "<strong>网点数据加载失败</strong>：请确认 <code>" + DATA_URL +
+            "</code> 与本页面在同一目录且可访问（GitHub Pages 部署时请勿遗漏 data 目录）。" +
+            "机构代码将无法自动匹配，将原样展示。");
+    }
+}
 
 // ================= 数据映射 =================
 const BAG_TYPE_MAP = {
@@ -394,7 +446,13 @@ function displayOrgCode(code) {
 }
 
 // ================= 解析逻辑 =================
-function parseBarcode() {
+let dataLoadPromise = null; // 保证多次点击只触发一次加载
+
+async function parseBarcode() {
+    // 等待网点数据加载完成后再解析，确保机构代码能正确匹配
+    if (!dataReady && !dataLoadPromise) dataLoadPromise = loadPostalData();
+    if (!dataReady && dataLoadPromise) await dataLoadPromise;
+
     const barcode = document.getElementById("barcode").value.trim();
     const out = document.getElementById("output");
     const hint = document.getElementById("inputHint");
@@ -486,23 +544,8 @@ function updateInputHint() {
     }
 }
 
-// 数据状态提示
-(function initDataStatus() {
-    const el = document.getElementById("dataStatus");
-    const d = window.POSTAL_DATA;
-    if (d && d.postal6 && d.postal4) {
-        const m = d.meta || {};
-        el.className = "status-bar ok";
-        el.innerHTML = '<span class="dot" aria-hidden="true"></span><span>' +
-            '网点匹配数据已加载：' + (m.totalOutlets || 0).toLocaleString() + ' 个网点 / ' +
-            (m.postal6Count || 0).toLocaleString() + ' 个邮编（数据日期：' + (m.date || "未知") +
-            '）。机构代码将自动匹配网点或省市区县。</span>';
-    } else {
-        el.className = "status-bar warn";
-        el.innerHTML = '<span class="dot" aria-hidden="true"></span><span>' +
-            '未检测到 <strong>postal_data.js</strong>：请将它与本页面放在同一目录，机构代码将无法自动匹配（会原样展示）。</span>';
-    }
-})();
+// 页面加载后自动开始拉取数据（用户提前点击解析时 parseBarcode 也会等待）
+dataLoadPromise = loadPostalData();
 </script>
 
 </body>
