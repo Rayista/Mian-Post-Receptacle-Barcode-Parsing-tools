@@ -279,7 +279,7 @@
     </main>
 
     <footer class="footer">
-机构代码按公示的前 6 位邮编匹配具体机构；若数据不准确，将回退至上一级。
+机构编号优先按 8 位完整编号精确匹配，其余按前 6 位邮编匹配；若数据不准确，将回退至上一级。
     </footer>
 </div>
 
@@ -303,7 +303,8 @@ function showLoadedStatus() {
     const m = (d && d.meta) || {};
     setDataStatus("ok",
         "网点匹配数据已加载：" + (m.totalOutlets || 0).toLocaleString() + " 个网点 / " +
-        (m.postal6Count || 0).toLocaleString() + " 个邮编（数据日期：" + (m.date || "未知") +
+        (m.postal6Count || 0).toLocaleString() + " 个邮编 / " + (m.org8Count || 0) +
+        " 个精确机构编号（数据日期：" + (m.date || "未知") +
         "）。来源：<code>" + DATA_URL + "</code>。机构代码将自动匹配网点或省市区县。");
 }
 
@@ -313,7 +314,7 @@ async function loadPostalData() {
         const resp = await fetch(DATA_URL, { cache: "no-cache" });
         if (!resp.ok) throw new Error("HTTP " + resp.status);
         const data = await resp.json();
-        if (!data || !data.postal6 || !data.postal4) throw new Error("数据结构不完整");
+        if (!data || !data.postal6 || !data.postal4 || !data.org8) throw new Error("数据结构不完整");
         window.POSTAL_DATA = data;
         dataReady = true;
         showLoadedStatus();
@@ -328,7 +329,7 @@ async function loadPostalData() {
             s.onerror = resolve;
             document.head.appendChild(s);
         });
-        if (window.POSTAL_DATA && window.POSTAL_DATA.postal6) {
+        if (window.POSTAL_DATA && window.POSTAL_DATA.postal6 && window.POSTAL_DATA.org8) {
             dataReady = true;
             showLoadedStatus();
             return;
@@ -375,8 +376,9 @@ const DIRECTION_MAP = { "1": "本转不分", "2": "本口", "3": "转口" };
 
 // ================= 网点邮编匹配 =================
 // 数据结构（postal_data.js / postal_data.json）：
-//   postal6[6位邮编] = [[省, 市, 县, 网点名称], ...]
-//   postal4[4位前缀] = [[省, 市, 县], ...]（已去重）
+//   org8[8位完整机构编号] = [省, 市, 县/区, 网点名称]（可靠来源的精确机构编号，最高优先级）
+//   postal6[6位邮编]     = [[省, 市, 县, 网点名称], ...]
+//   postal4[4位前缀]     = [[省, 市, 县], ...]（已去重）
 
 // 拼接省市区县：跳过空串与连续重复项（如「上海市 / 上海市 / 嘉定区」→「上海市嘉定区」）
 function regionStr(parts) {
@@ -409,6 +411,13 @@ function resolveRegion(triples) {
 function matchOrgCode(code) {
     const data = window.POSTAL_DATA;
     if (!data || !data.postal6 || !data.postal4) return null;
+
+    // ⓪ 8 位完整机构编号精确匹配（可靠来源：杭州全市机构编号，最高优先级）
+    //    此处即使邮编末两位为 00，也按精确机构编号展示具体网点（权威数据优先于 00 降级规则）
+    if (data.org8 && Array.isArray(data.org8[code])) {
+        const o = data.org8[code];
+        return regionStr([o[0], o[1], o[2]]) + (o[3] || "");
+    }
 
     // ① 前 6 位邮编精确匹配
     const postal = code.slice(0, 6);
