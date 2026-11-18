@@ -248,12 +248,12 @@
 
     <header class="hero">
         <h1>缅邮总包条码解析工具</h1>
-        <p>输入 30 位总包条码，自动解析封发类型、总包类型等信息，并根据「当前全部网点」数据，按邮编智能匹配发出局与接收局对应的邮政网点或省市区县。</p>
+        <p>输入 30 位总包条码，自动解析封发类型、总包类型等信息，并按邮编智能匹配机构代码对应的邮政网点或省市区县。</p>
     </header>
 
     <main>
         <section class="card">
-            <h2 class="card-title"><span class="num">1</span>输入总包条码</h2>
+            <h2 class="card-title">输入总包条码</h2>
             <label class="field-label" for="barcode">30 位纯数字条码</label>
             <input type="text" id="barcode" inputmode="numeric" autocomplete="off" spellcheck="false"
                    placeholder="请输入 30 位纯数字总包条码"
@@ -279,8 +279,7 @@
     </main>
 
     <footer class="footer">
-        网点数据来源：中国邮政网点监测报告（2026-11-18 当前全部网点）<br>
-        机构代码按前 6 位邮编匹配网点；邮编末两位为 00 时（多为未细化到网点的区县总包邮编）只匹配省市县；无匹配时回退前 4 位，仍无匹配则原样展示。
+机构代码按公示的前 6 位邮编匹配具体机构；若数据不准确，将回退至上一级。
     </footer>
 </div>
 
